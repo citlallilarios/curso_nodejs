@@ -78,7 +78,7 @@ const usuariosDelete = async (req = request, res = response) => {
 
 try {
   conn = await pool.getConnection();
-  const usuarios = await conn.query(usuariosQueries.deleteUsuario [ email ]);
+  const usuarios = await conn.query(usuariosQueries.deleteUsuario, [ email ]);
   
   res.json({usuarios});
 } catch (error){
