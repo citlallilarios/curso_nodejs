@@ -2,13 +2,24 @@ const bcrypt = require("bcryptjs/dist/bcrypt");
 const { request, response } = require("express");
 const pool = require("../db/conexion");
 const usuariosQueries = require("../models/usuarios");
+const bcryptjs = require("bcryptjs");
+const req = require("express/lib/request");
 
 const usuariosGet = async (req = request, res = response) => {
-let conn;
+  const {limite = 5, desde = 0 } = req.query;
+ desde = parseInt(desde);
+ limite = parseInt(limite);
+
+ 
+  let conn;
 
 try {
   conn = await pool.getConnection();
-  const usuarios = await conn.query(usuariosQueries.selectUsuarios)
+
+  const usuarios = await conn.query(usuariosQueries.selectUsuarios, [ 
+    desde,
+  limite,
+]);
   
   res.json({usuarios});
 } catch (error){
@@ -29,7 +40,7 @@ const usuariosPost = async (req = request, res = response) => {
 
 try {
   const salt = bcrypt.getSaltSync();
-  const passwordHash = bcrypt.hashSync(password, salt);
+  const passwordHash = bcryptjs.hashSync(password, salt);
 
   conn = await pool.getConnection();
   
@@ -97,4 +108,26 @@ try {
   
 };
 
+const usuarioSignin = async (req = request, res = response) => {
+  const {email, password} = req.body;
+   let conn;
+
+   try {
+     conn = await pool.getConnection();
+
+     const usuarios = await conn.query(usuariosQueries.get, [ email ]);
+
+     res.json({ usuarios });
+   }catch (error) {
+     console.log( error );
+     res
+
+         .status(500)
+         .json({ msg: "porfavor conectae al administrador.",error});
+
+   }finally{
+
+    if (conn) conn.end();
+   }
+}
 module.exports = { usuariosGet, usuariosPost, usuariosPut, usuariosDelete };
